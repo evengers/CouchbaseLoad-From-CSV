@@ -1,0 +1,32 @@
+{
+  "name": "stream2couchbase",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adm-zip": "^0.4.4",
+    "ascii-json": "^0.2.0",
+    "chunking-streams": "0.0.5",
+    "co": "^3.0.6",
+    "co-child-process": "0.0.3",
+    "couchbase": "^2.0.0-dp1",
+    "csv-streamify": "^1.0.0",
+    "date-utils": "^1.2.16",
+    "iconv-lite": "^0.4.4",
+    "jsesc": "^0.4.3",
+    "jsonfile": "^1.2.0",
+    "lazy.js": "^0.3.2",
+    "merge": "^1.1.3",
+    "nopt": "^3.0.1",
+    "spawn-command": "0.0.2",
+    "split": "^0.3.0",
+    "string": "^1.9.0",
+    "time": "^0.11.0",
+    "utf8": "^2.0.0"
+  }
+}
