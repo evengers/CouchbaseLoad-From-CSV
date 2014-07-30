@@ -11,7 +11,6 @@ var Lazy = require('lazy.js');
 var jf = require('jsonfile'); //https://github.com/jprichardson/node-jsonfile
 var util = require('util');
 var asciiJSON = require('ascii-json');
-var utf8 = require('utf8');
 var merge = require('merge');
 //var time = require('date-utils'); //
 var jsesc = require('jsesc');
@@ -57,20 +56,17 @@ function doMe (theCmd){
 };
 
 
-//need to do thie parameters for this:
-//sh /opt/couchbase/bin/tools/cbdocloader -u Administrator -p canada -n 127.0.0.1:8091 -b leis docsTemp
 
 var ctr = 0;
 
 
 var instream = fs.createReadStream(theCsv);
-
 var outstream = new stream;
 var rl = readline.createInterface(instream, outstream);
 
 var isHeader = true;
-var writeToFile = false;
-var zipWhileWrite = false;   //if this true it will be very slow 
+var writeToFile = false; //just in case we want to use cbdocloader
+var justAtest = false;   //'false' allows writing to database 
 
 var asciiCheck=0;
 var detCheck=0;
@@ -84,13 +80,13 @@ var dataToAppend = {
        identtimestamp : Date.today().toString()
      };
 
-//helper tor trim
+//helper tor trim ... tidy data ...  remove quotes etc here 
 function trimThem(x) { 
-        if (!asciiJSON.isAscii(x)) {
-             x = jsesc(x); //escapes various language special/accent characters
-          };
-          x = x.replace(/(\r\n|\n|\r)/gm,""); //removes all 3 types of line break
-          x= S(x).trim().s; 
+    // if (!asciiJSON.isAscii(x)) {
+    //      x = jsesc(x); //escapes language special/accent characters
+    //   };
+        x = x.replace(/(\r\n|\n|\r)/gm,""); //removes 3 types of line break
+        x= S(x).trim().s; 
       return x; 
 };
 
@@ -112,35 +108,16 @@ rl.on('line', function(line) {
       var resObj = Lazy(resArray).toObject(); 
       merge(resObj,dataToAppend);
 
-//console.log (resObj, "that object");
-         //add some info to object here if needed
-           /*   resObj.identtype = '"lei"';
-              resObj.identuser = '"test-user"';
-              var now = new time.Date();
-              resObj.identtimestamp = '"'+now.toString()+'"';
-*/
       var theKey = rowAsArray[0]; //assumes unique key in 1st column
       var theFile = path.join(__dirname, 'docsTemp', theKey +'.json');
-    //do 2nd check ... non-ascii will cause loader to choke
-      var resStr = JSON.stringify(resObj);
-      if (!asciiJSON.isAscii(resStr)) {
-            //try escape again 
-             resObj = jsesc(resObj, {'json': true});
-             //and check again
-               var resStr = JSON.stringify(resObj);
-                  if (!asciiJSON.isAscii(resStr)) {
-               console.log ("better check: ", ctr , " ", theKey);
-              var theFile = path.join(__dirname, 'docsTempREJECTS', theKey +'.json');
-                 };
-       };
-  //    var resStr = JSON.stringify(resObj);
- 
-//if (!asciiJSON.isAscii(resStr)) resObj = jsesc(resObj, {'json': true}); THIS WORKS alternative place to escape no ascii output!!
-
-db.set("utf8_object",theKey,resObj, function (err, result) {
+    
+if (!justAtest) db.set(theKey,resObj, function (err, result) {
       if (err) throw err;
       console.log('that was ... ', theKey, " ", ctr);
      }); 
+
+if (justAtest) console.log('nothing going to doc store just testing ...', theKey, " ", ctr);
+
 /*
 db.upsert(theKey,resObj, function (err, result) {
       if (err) throw err;
@@ -148,23 +125,12 @@ db.upsert(theKey,resObj, function (err, result) {
      });          
  */         
            
-          // jf.writeFileSync(theFile, resObj);
-  if(writeToFile) jf.writeFile(theFile, resObj, function(err) {
+    if(writeToFile) jf.writeFile(theFile, resObj, function(err) {
                  if (err) throw err;
-                 if(zipWhileWrite){
-                 console.log ("zipping json file: ", theKey, " ",ctr);
-                 zip.addLocalFile(theFile); //do after write callback
-                 zip.writeZip(/*target file name*/"docsTemp/JSONfiles.zip");
-                 };
+                 console.log ("writing json file: ", theKey, " ",ctr);
               });
-          // console.log(ctr);
-//try to zip as we go
-           
-         //  doMe("zip -rj " + dest + "JSON " + theTempJsonDir + "/"+ theKey + ".json");
 
     }; //end else for each row
-
-
 
 });
 
@@ -176,14 +142,15 @@ rl.on('close', function() {
    console.log ("all done!! processed ...", ctr);
 
    console.log ("tidying up ... go for a coffee this will take some time!! ", ctr);
+  
   var bunchaCmds = [
       "mv " + theCsv + " " +  theCsv + ".done",
-      "zip -rj " + dest + "JSON " + theTempJsonDir + " -q",
       "rm -r " + theTempJsonDir,
       "mkdir " + theTempJsonDir
     ];
  
-    // doMe(bunchaCmds.join(" && "));  //use later after figure out load
+      doMe(bunchaCmds.join(" && "));  //use later after figure out load
 
+    
 
 });
