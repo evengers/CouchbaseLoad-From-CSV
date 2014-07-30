@@ -5,7 +5,7 @@ Load doc data to couch base using NodeJs.
 
 Data is streamed so presumably copes with large files. Tested against a few hundred k lines.
 
-Unlike cbdocloader, this does not need to write json files. 
+Unlike cbdocloader, this does not need to (write & then) read from json files. 
 
 
 CSVs are parsed using Lazy.js and inserted directly into couchbase. 
